@@ -1,6 +1,8 @@
 package com.app.filetodb.service;
 
 import com.app.filetodb.component.ErrorHandler;
+import jakarta.transaction.Synchronization;
+import org.apache.commons.collections.bag.SynchronizedBag;
 import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
@@ -31,9 +33,13 @@ public class BatchDatabaseService {
     private ErrorHandler errorHandler;
 
     private static final int BATCH_SIZE = 1000;
-    private static final int THREAD_POOL_SIZE = 10;
+    private static final int THREAD_POOL_SIZE = 5;
+
     //ExecutorService instance with fixed thread pool size for parallel batch entries.
-    private final ExecutorService executorService = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
+    //private final ExecutorService executorService = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
+
+    //Single ExecutorService instance for sequential batch entries.
+    //private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     public void insertData(List<String[]> rows) {
         String insertQuery = "INSERT INTO csv_data (id, description, name, value_1, value_2, value_3, value_4, company, item, value_5) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -59,7 +65,11 @@ public class BatchDatabaseService {
 
         }
 //        executorService.shutdown();
+//
+//        while(!executorService.isTerminated()){}
+//        System.out.println("Executor is terminated");
     }
+
 
     private boolean processBatch(List<String[]> batch, String insertQuery){
         try {
